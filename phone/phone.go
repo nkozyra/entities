@@ -1,5 +1,14 @@
 //	Phone tokenizer and normalization package
 //	https://github.com/nkozyra/entities
+//	http://en.wikipedia.org/wiki/E.164
+//	http://en.wikipedia.org/wiki/National_conventions_for_writing_telephone_numbers
+
+/*
+	Usage:
+	phone := phone.New("+1 (202) 555-1234")
+	phone.Normalize()
+
+*/
 
 package phone
 
@@ -19,7 +28,8 @@ type Phone struct {
 	Raw string
 	Normalized string
 	CountryCode string
-	AreaCode int
+	AreaCode string
+	SubscriberNumber string
 	InternationalPrefix int
 	LongDistancePrefix int
 	Vanity bool
@@ -29,6 +39,9 @@ type PhoneComponent struct {
 	pattern string
 	countryCodeExists bool
 	countryCodePosition int
+
+	areaCodeExists bool
+	areaCodePosition int
 }
 
 func New(raw string) (Phone) {
@@ -43,6 +56,8 @@ func Init() {
 			{ pattern: `\+(\d{1,3})\s+\((\d{3})\)\s+(\d{3})[\s\-]+(\d{4})`, 
 				countryCodeExists: true,
 				countryCodePosition: 1,
+				areaCodeExists: true,
+				areaCodePosition: 2,
 			}, 
 			{ pattern: "what" },
 	}
@@ -50,13 +65,19 @@ func Init() {
 }
 
 func (a *Phone) Prepare() {
+
 	//	The only characters we'll allow are +,[0-9],-,(,),[a-z]
 	//	Replace the rest with whitespace
+
+	rg,_ := regexp.Compile(`[^\d\-\+\(\)\s]+`)
+	a.Raw = rg.ReplaceAllString(a.Raw," ")
+	sp,_ := regexp.Compile(`\s{2,}`)
+	a.Raw = sp.ReplaceAllString(a.Raw," ")
 }
 
 func (a *Phone) Normalize() {
 	Init()
-
+	a.Prepare()
 	for i,_ := range pats {
 
 		rg,err := regexp.Compile(pats[i].pattern)
@@ -67,19 +88,26 @@ func (a *Phone) Normalize() {
 
 			addbyte := []byte(a.Raw)
 			if rg.Match(addbyte) {
-				fmt.Println("YES",pats[i])
+
 
 				// country code resolution
 				if pats[i].countryCodeExists == true {
 					rpos := "+$" + strconv.FormatInt(int64(pats[i].countryCodePosition), 10)
 					a.CountryCode = rg.ReplaceAllString(a.Raw, rpos)
 				} else {
-					a.CountryCode = ""
+					a.CountryCode = "0"
 				}
 
-				
+				// area code resolution
+				if pats[i].areaCodeExists == true {
+					rpos := "$" + strconv.FormatInt(int64(pats[i].areaCodePosition), 10)
+					a.AreaCode = rg.ReplaceAllString(a.Raw, rpos)
+				} else {
+					a.AreaCode = ""
+				}
+
 			} else {
-				fmt.Println("No match",pats[i])
+
 			}
 
 		}
