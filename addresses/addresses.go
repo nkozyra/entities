@@ -7,15 +7,7 @@ import
 (
 )
 
-type Address struct {
-	Raw string
-	Normalized string
-}
-
-func (a *Address) Init() {
-
-}
-
-func Normalize() {
-
-}
+var
+(
+	pats []string
+)
