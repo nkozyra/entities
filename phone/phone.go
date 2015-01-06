@@ -1,7 +1,7 @@
 //	Phone tokenizer and normalization package
 //	https://github.com/nkozyra/entities
-//	http://en.wikipedia.org/wiki/E.164
-//	http://en.wikipedia.org/wiki/National_conventions_for_writing_telephone_numbers
+//	Honors E.164: http://en.wikipedia.org/wiki/E.164
+//	Respects national conventions: http://en.wikipedia.org/wiki/National_conventions_for_writing_telephone_numbers
 
 /*
 	Usage:
@@ -16,7 +16,7 @@ import
 (
 		"fmt"
 		"regexp"
-		"strconv"
+		//"strconv"
 )
 
 var
@@ -38,10 +38,13 @@ type Phone struct {
 type PhoneComponent struct {
 	pattern string
 	countryCodeExists bool
-	countryCodePosition int
+	countryCodePosition string
 
 	areaCodeExists bool
-	areaCodePosition int
+	areaCodePosition string
+
+	subscriberNumberExists bool
+	subscriberNumberPosition string
 }
 
 func New(raw string) (Phone) {
@@ -55,11 +58,18 @@ func Init() {
 			//+1 (123) 456-7890, +1 (123) 456 7890, 
 			{ pattern: `\+(\d{1,3})\s+\((\d{3})\)\s+(\d{3})[\s\-]+(\d{4})`, 
 				countryCodeExists: true,
-				countryCodePosition: 1,
+				countryCodePosition: `$1`,
 				areaCodeExists: true,
-				areaCodePosition: 2,
+				areaCodePosition: `$2`,
 			}, 
-			{ pattern: "what" },
+			{ pattern: `\+(\d{1,3})\s+(\d{3})\s+(\d{3})[\s\-]+(\d{4})`, 
+				countryCodeExists: true,
+				countryCodePosition: `$1`,
+				areaCodeExists: true,
+				areaCodePosition: `$2`,
+				subscriberNumberExists: true,
+				subscriberNumberPosition: `$3 $4`,
+			}, 
 	}
 
 }
@@ -92,7 +102,7 @@ func (a *Phone) Normalize() {
 
 				// country code resolution
 				if pats[i].countryCodeExists == true {
-					rpos := "+$" + strconv.FormatInt(int64(pats[i].countryCodePosition), 10)
+					rpos := "+" + pats[i].countryCodePosition
 					a.CountryCode = rg.ReplaceAllString(a.Raw, rpos)
 				} else {
 					a.CountryCode = "0"
@@ -100,7 +110,7 @@ func (a *Phone) Normalize() {
 
 				// area code resolution
 				if pats[i].areaCodeExists == true {
-					rpos := "$" + strconv.FormatInt(int64(pats[i].areaCodePosition), 10)
+					rpos := pats[i].areaCodePosition
 					a.AreaCode = rg.ReplaceAllString(a.Raw, rpos)
 				} else {
 					a.AreaCode = ""
