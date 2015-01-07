@@ -62,6 +62,7 @@ func Init() {
 				areaCodeExists: true,
 				areaCodePosition: `$2`,
 			}, 
+			//
 			{ pattern: `\+(\d{1,3})\s+(\d{3})\s+(\d{3})[\s\-]+(\d{4})`, 
 				countryCodeExists: true,
 				countryCodePosition: `$1`,
@@ -70,14 +71,16 @@ func Init() {
 				subscriberNumberExists: true,
 				subscriberNumberPosition: `$3 $4`,
 			}, 
-			{ pattern: `(\d{1,3})\s+(\d{3})\s+(\d{3})[\s\-]+(\d{4})`, 
+			// 1(817) 569-8900	
+			{ pattern: `(\d{1,3})\s*(\d{3})\s+(\d{3})[\s\-]+(\d{4})`, 
 				countryCodeExists: true,
 				countryCodePosition: `$1`,
 				areaCodeExists: true,
 				areaCodePosition: `$2`,
 				subscriberNumberExists: true,
 				subscriberNumberPosition: `$3 $4`,
-			}, 			
+			}, 
+			// 		
 	}
 
 }
@@ -123,6 +126,8 @@ func (a *Phone) Normalize() {
 				} else {
 					a.AreaCode = ""
 				}
+
+				break
 
 			} else {
 
