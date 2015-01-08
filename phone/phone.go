@@ -99,6 +99,7 @@ func (a *Phone) Prepare() {
 func (a *Phone) Normalize() {
 	Init()
 	a.Prepare()
+	fmt.Println(a.Raw)
 	for i,_ := range pats {
 
 		rg,err := regexp.Compile(pats[i].pattern)
@@ -109,7 +110,6 @@ func (a *Phone) Normalize() {
 
 			addbyte := []byte(a.Raw)
 			if rg.Match(addbyte) {
-
 
 				// country code resolution
 				if pats[i].countryCodeExists == true {
@@ -130,9 +130,11 @@ func (a *Phone) Normalize() {
 				break
 
 			} else {
-
+				
 			}
 
 		}
 	}
+
+	a.Normalized = a.CountryCode + a.AreaCode
 }
