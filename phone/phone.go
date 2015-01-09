@@ -45,6 +45,7 @@ type PhoneComponent struct {
 
 	subscriberNumberExists bool
 	subscriberNumberPosition string
+
 }
 
 func New(raw string) (Phone) {
@@ -61,6 +62,8 @@ func Init() {
 				countryCodePosition: `$1`,
 				areaCodeExists: true,
 				areaCodePosition: `$2`,
+				subscriberNumberExists: true,
+				subscriberNumberPosition: `$3$4`,
 			}, 
 			//
 			{ pattern: `\+(\d{1,3})\s+(\d{3})\s+(\d{3})[\s\-]+(\d{4})`, 
@@ -69,18 +72,18 @@ func Init() {
 				areaCodeExists: true,
 				areaCodePosition: `$2`,
 				subscriberNumberExists: true,
-				subscriberNumberPosition: `$3 $4`,
+				subscriberNumberPosition: `$3$4`,
 			}, 
 			// 1(817) 569-8900	
-			{ pattern: `(\d{1,3})\s*(\d{3})\s+(\d{3})[\s\-]+(\d{4})`, 
-				countryCodeExists: true,
-				countryCodePosition: `$1`,
+			{ pattern: `\((\d{3})\)\s+(\d{3})[\s\-]+(\d{4})`, 
+				countryCodeExists: false,
+				countryCodePosition: ``,
 				areaCodeExists: true,
-				areaCodePosition: `$2`,
+				areaCodePosition: `$1`,
 				subscriberNumberExists: true,
-				subscriberNumberPosition: `$3 $4`,
+				subscriberNumberPosition: `$2$3`,
 			}, 
-			// 		
+			// 	(555)  123-4567
 	}
 
 }
@@ -116,7 +119,7 @@ func (a *Phone) Normalize() {
 					rpos := "+" + pats[i].countryCodePosition
 					a.CountryCode = rg.ReplaceAllString(a.Raw, rpos)
 				} else {
-					a.CountryCode = "0"
+					a.CountryCode = "1"
 				}
 
 				// area code resolution
@@ -125,6 +128,14 @@ func (a *Phone) Normalize() {
 					a.AreaCode = rg.ReplaceAllString(a.Raw, rpos)
 				} else {
 					a.AreaCode = ""
+				}
+
+				// subscriber # resolution
+				if pats[i].subscriberNumberExists == true {
+					rpos := pats[i].subscriberNumberPosition
+					a.SubscriberNumber = rg.ReplaceAllString(a.Raw, rpos)
+				} else {
+					a.SubscriberNumber = ""
 				}
 
 				break
@@ -136,5 +147,5 @@ func (a *Phone) Normalize() {
 		}
 	}
 
-	a.Normalized = a.CountryCode + a.AreaCode
+	a.Normalized = a.CountryCode + a.AreaCode + a.SubscriberNumber
 }
